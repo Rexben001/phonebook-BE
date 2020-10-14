@@ -55,10 +55,27 @@ func getContacts(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
 
 	var contacts []Contact
-
-	db.Find(&contacts)
-
 	finalResult := make(map[string]interface{})
+
+	result := db.Find(&contacts)
+
+	if result.Error != nil {
+		finalResult["message"] = "Unable to fetch contacts"
+		finalResult["status"] = 400
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+	}
+
+	if len(contacts) < 1 {
+		finalResult["message"] = "No contacts"
+		finalResult["status"] = 404
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+
+	}
+
 	finalResult["message"] = "Fetched contacts successfully"
 	finalResult["status"] = 200
 	finalResult["success"] = true
@@ -73,14 +90,31 @@ func getContact(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
 
 	params := mux.Vars(request)
+	finalResult := make(map[string]interface{})
 
 	var contact []Contact
 
 	fmt.Print(params["id"])
 
-	db.First(&contact, params["id"])
+	result := db.First(&contact, params["id"])
 
-	finalResult := make(map[string]interface{})
+	if result.Error != nil {
+		finalResult["message"] = "Unable to fetch contacts"
+		finalResult["status"] = 400
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+	}
+
+	if len(contact) < 1 {
+		finalResult["message"] = "Contact does not exists"
+		finalResult["status"] = 404
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+
+	}
+
 	finalResult["message"] = "Fetched contact successfully"
 	finalResult["status"] = 200
 	finalResult["success"] = true
@@ -98,7 +132,6 @@ func deleteContact(response http.ResponseWriter, request *http.Request) {
 	var contact []Contact
 
 	db.First(&contact, params["id"])
-	fmt.Print(params["id"], &contact)
 
 	finalResult := make(map[string]interface{})
 
