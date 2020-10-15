@@ -36,6 +36,12 @@ var db *gorm.DB
 
 var err error
 
+func index(response http.ResponseWriter, request *http.Request) {
+	response.WriteHeader(200)
+	response.Write([]byte(`Welcome to Phonebook's API`))
+
+}
+
 func createContact(response http.ResponseWriter, request *http.Request) {
 	var contact Contact
 
@@ -206,6 +212,8 @@ func main() {
 
 	fmt.Println("App has started!!!!")
 
+	router.HandleFunc("/", index).Methods("GET")
+	
 	router.HandleFunc("/contacts", createContact).Methods("POST")
 
 	router.HandleFunc("/contacts", getContacts).Methods("GET")
