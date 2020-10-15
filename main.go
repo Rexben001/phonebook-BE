@@ -52,18 +52,19 @@ func createContact(response http.ResponseWriter, request *http.Request) {
 
 	db.AutoMigrate(&Contact{})
 
-	var message string
+	message := make(map[string]interface{})
+	
 
 	if contact.About == "" {
-message = "Email field is required"
+		message["email"] = "Email field is required"
 
 	}
 	if contact.Name == "" {
-message = "Name field is required"
+		message["name"] = "Name field is required"
 
 	}
 	if contact.Image == "" {
-message = "Name field is required"
+		message["Image"] = "Image field is required"
 
 	}
 
