@@ -25,7 +25,7 @@ type Contact struct {
 
 	Number string
 
-	Email string
+	Email string `gorm:"primary_key"`
 
 	About string
 
@@ -48,8 +48,46 @@ func createContact(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
 
 	json.NewDecoder(request.Body).Decode(&contact)
+	finalResult := make(map[string]interface{})
 
 	db.AutoMigrate(&Contact{})
+
+	var message string
+
+	if contact.About == "" {
+message = "Email field is required"
+
+	}
+	if contact.Name == "" {
+message = "Name field is required"
+
+	}
+	if contact.Image == "" {
+message = "Name field is required"
+
+	}
+
+	if contact.About == ""  || contact.Name == "" || contact.Image == "" {
+			finalResult["message"] = message
+		finalResult["status"] = 400
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+	}
+
+
+	val := db.Where("email = ?", contact.Email).First(&contact)
+
+	if val.RowsAffected == 1{
+		finalResult["message"] = "Email exists already"
+		finalResult["status"] = 404
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+
+	}
+
+
 
 	db.Create(&contact)
 
