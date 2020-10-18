@@ -203,9 +203,31 @@ func updateContact(response http.ResponseWriter, request *http.Request) {
 	var contact Contact
 
 	json.NewDecoder(request.Body).Decode(&contact)
+	message := make(map[string]interface{})
+	finalResult := make(map[string]interface{})
 
 
-	db.Model(&contact).Where("ID=?", params["id"]).Updates(Contact{Name: contact.Name})
+		if contact.About == "" {
+		message["email"] = "Email field is required"
+
+	}
+	if contact.Name == "" {
+		message["name"] = "Name field is required"
+
+	}
+	if contact.Image == "" {
+		message["Image"] = "Image field is required"
+
+	}
+	if contact.About == ""  || contact.Name == "" || contact.Image == "" {
+			finalResult["message"] = message
+		finalResult["status"] = 400
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+	}
+
+	db.Model(&contact).Where("ID=?", params["id"]).Updates(Contact{Name: contact.Name, Image: contact.Image, About: contact.About, Number: contact.Number, Email: contact.Email})
 
 	json.NewEncoder(response).Encode(&contact)
 
