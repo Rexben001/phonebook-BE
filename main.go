@@ -201,19 +201,11 @@ func updateContact(response http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 
 	var contact Contact
-	var requestContact Contact
 
-	db.First(&contact, params["id"])
+	json.NewDecoder(request.Body).Decode(&contact)
 
-	json.NewDecoder(request.Body).Decode(&requestContact)
 
-	contact.Name = requestContact.Name
-	contact.Number = requestContact.Number
-	contact.Email = requestContact.Email
-	contact.About = requestContact.About
-	contact.Image = requestContact.Image
-
-	db.Save(&contact)
+	db.Model(&contact).Where("ID=?", params["id"]).Updates(Contact{Name: contact.Name})
 
 	json.NewEncoder(response).Encode(&contact)
 
