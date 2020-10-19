@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"time"
 
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/jinzhu/gorm"
 
@@ -30,6 +34,14 @@ type Contact struct {
 	About string
 
 	Image string
+}
+
+type User struct {
+	gorm.Model
+
+	Email string `gorm:"primary_key"`
+
+	Password string
 }
 
 var db *gorm.DB
@@ -227,11 +239,151 @@ func updateContact(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+
 	db.Model(&contact).Where("ID=?", params["id"]).Updates(Contact{Name: contact.Name, Image: contact.Image, About: contact.About, Number: contact.Number, Email: contact.Email})
 
 	json.NewEncoder(response).Encode(&contact)
 
 }
+
+func createUser(response http.ResponseWriter, request *http.Request) {
+
+	response.Header().Add("content-type", "application/json")
+	var user User
+
+	db.AutoMigrate(&User{})
+	json.NewDecoder(request.Body).Decode(&user)
+
+	message := make(map[string]interface{})
+		finalResult := make(map[string]interface{})
+
+
+	if user.Email == "" {
+		message["email"] = "Email field is required"
+
+	}
+	if len(user.Password) < 4 {
+		message["password"] = "Password length should be greater than 4"
+
+	}
+	
+
+	if user.Email == "" || len(user.Password) < 4{
+			finalResult["message"] = message
+		finalResult["status"] = 400
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+	}
+
+		re := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+
+		if !re.MatchString(user.Email) {
+			finalResult["message"] = "Pls, enter a valid email"
+		finalResult["status"] = 400
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+	}
+
+
+	val := db.Where("email = ?", user.Email).First(&user)
+
+	if val.RowsAffected == 1{
+		finalResult["message"] = "Email exists already"
+		finalResult["status"] = 404
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+
+	}
+
+	hashedPassword, errPassword := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+
+	user.Password = string(hashedPassword)
+	if errPassword != nil {
+	finalResult["message"] = "Unable to create an account. Try again later"
+		finalResult["status"] = 400
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+	
+		return
+	}
+
+	// result, err := collection.InsertOne(ctx, user)
+	if err != nil {
+		finalResult["message"] = "Unable to create an account. Try again later"
+		finalResult["status"] = 400
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+	
+		return
+	}
+	db.Create(&user)
+
+	json.NewEncoder(response).Encode(&user)
+}
+
+func login(response http.ResponseWriter, request *http.Request){
+		response.Header().Add("content-type", "application/json")
+	var user User
+	var result User
+
+	json.NewDecoder(request.Body).Decode(&user)
+
+	// message := make(map[string]interface{})
+		finalResult := make(map[string]interface{})
+
+		val := db.Where("email = ?", user.Email).First(&result)
+
+	if val.RowsAffected == 0{
+		finalResult["message"] = "Email or password is incorrect"
+		finalResult["status"] = 404
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+
+	}
+
+
+	err = bcrypt.CompareHashAndPassword([]byte(result.Password), []byte(user.Password))
+
+	if err != nil {
+			finalResult["message"] = "Email or password is incorrect"
+		finalResult["status"] = 404
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+	}
+
+		secret, _ := os.LookupEnv("SECRET")
+
+atClaims := jwt.MapClaims{}
+	atClaims["authorized"] = true
+	atClaims["id"] = result.ID
+	atClaims["email"] = result.Email
+	atClaims["exp"] = time.Now().Add(time.Minute * 60).Unix()
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	token, err := at.SignedString([]byte(secret))
+	if err != nil {
+			finalResult["message"] = "Unable to generate token"
+		finalResult["status"] = 404
+		finalResult["success"] = false
+		json.NewEncoder(response).Encode(finalResult)
+		return
+	}
+
+
+	finalResult["message"] = "User logged in successfully"
+	finalResult["status"] = 200
+	finalResult["success"] = true
+	finalResult["token"] = token
+
+	json.NewEncoder(response).Encode(finalResult)
+
+}
+
+
 
 func init() {
 	// loads values from .env into the system
@@ -276,6 +428,10 @@ func main() {
 	router.HandleFunc("/contacts/{id}", deleteContact).Methods("DELETE")
 
 	router.HandleFunc("/contacts/{id}", updateContact).Methods("PUT")
+
+	router.HandleFunc("/users", createUser).Methods("POST")
+
+	router.HandleFunc("/login", login).Methods("POST")
 
 	handler := cors.Default().Handler(router)
 
