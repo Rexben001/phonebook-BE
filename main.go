@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"regexp"
-	"time"
+	"strings"
 
 	"net/http"
 
@@ -65,7 +66,14 @@ func createContact(response http.ResponseWriter, request *http.Request) {
 	db.AutoMigrate(&Contact{})
 
 	message := make(map[string]interface{})
-	
+
+		_, err := validateToken(request)
+
+	if err != nil {
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(`{"message": "Pls, provide a valid token"}`))
+		return
+	}
 
 	if contact.About == "" {
 		message["email"] = "Email field is required"
@@ -186,6 +194,15 @@ func deleteContact(response http.ResponseWriter, request *http.Request) {
 
 	params := mux.Vars(request)
 
+
+		_, err := validateToken(request)
+
+	if err != nil {
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(`{"message": "Pls, provide a valid token"}`))
+		return
+	}
+
 	var contact []Contact
 
 	db.First(&contact, params["id"])
@@ -211,6 +228,14 @@ func updateContact(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
 
 	params := mux.Vars(request)
+
+		_, err := validateToken(request)
+
+	if err != nil {
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(`{"message": "Pls, provide a valid token"}`))
+		return
+	}
 
 	var contact Contact
 
@@ -362,7 +387,7 @@ atClaims := jwt.MapClaims{}
 	atClaims["authorized"] = true
 	atClaims["id"] = result.ID
 	atClaims["email"] = result.Email
-	atClaims["exp"] = time.Now().Add(time.Minute * 60).Unix()
+	// atClaims["exp"] = time.Now().Add(time.Minute * 60).Unix()
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	token, err := at.SignedString([]byte(secret))
 	if err != nil {
@@ -436,5 +461,38 @@ func main() {
 	handler := cors.Default().Handler(router)
 
 	log.Fatal(http.ListenAndServe(":"+port, handler))
+
+}
+
+
+func validateToken(request *http.Request) (string, error) {
+
+	secret, _ := os.LookupEnv("SECRET")
+
+	tokenString := request.Header.Get("Authorization")
+
+	
+	if string(tokenString) == "" {
+		return "", errors.New("Pls, provide a valid token")
+	}
+	
+	updatedToken := strings.Split(tokenString, " ")[1]
+	
+
+	token, _ := jwt.Parse(updatedToken, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return "", errors.New("Pls, provide a valid token")
+		}
+		return []byte(secret), nil
+	})
+
+	var err error
+
+	if token.Valid {
+		return "Valid token", err
+	}
+
+	return "", errors.New("Pls, provide a valid token")
 
 }
