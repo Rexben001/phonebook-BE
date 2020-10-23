@@ -59,6 +59,7 @@ func createContact(response http.ResponseWriter, request *http.Request) {
 	var contact Contact
 
 	response.Header().Add("content-type", "application/json")
+    response.Header().Set("Access-Control-Allow-Origin", "*")
 
 	json.NewDecoder(request.Body).Decode(&contact)
 	finalResult := make(map[string]interface{})
@@ -191,6 +192,7 @@ func getContact(response http.ResponseWriter, request *http.Request) {
 
 func deleteContact(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
+    response.Header().Set("Access-Control-Allow-Origin", "*")
 
 	params := mux.Vars(request)
 
@@ -226,6 +228,7 @@ func deleteContact(response http.ResponseWriter, request *http.Request) {
 
 func updateContact(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
+    response.Header().Set("Access-Control-Allow-Origin", "*")
 
 	params := mux.Vars(request)
 
