@@ -192,7 +192,11 @@ func getContact(response http.ResponseWriter, request *http.Request) {
 
 func deleteContact(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
-    response.Header().Set("Access-Control-Allow-Origin", "*")
+	response.Header().Set("Access-Control-Allow-Origin", "*")
+	
+	 if (request.Method == "OPTIONS") {
+        response.Header().Set("Access-Control-Allow-Headers", "Authorization") // You can add more headers here if needed
+    }
 
 	params := mux.Vars(request)
 
