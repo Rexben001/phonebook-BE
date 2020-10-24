@@ -227,12 +227,7 @@ func deleteContact(response http.ResponseWriter, request *http.Request) {
 
 func updateContact(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
-  response.Header().Add("Access-Control-Allow-Origin", "*")
-    response.Header().Add("Access-Control-Allow-Credentials", "true")
-    response.Header().Add("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-    response.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-
-
+ 
 	params := mux.Vars(request)
 
 		_, err := validateToken(request)
