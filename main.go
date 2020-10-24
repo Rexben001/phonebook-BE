@@ -473,9 +473,15 @@ func main() {
 
 	router.HandleFunc("/login", login).Methods("POST")
 
-	handler := cors.Default().Handler(router)
+	  corsWrapper := cors.New(cors.Options{
+        AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+        AllowedHeaders: []string{"Content-Type", "Origin", "Accept", "*"},
+  })
 
-	log.Fatal(http.ListenAndServe(":"+port, handler))
+
+	// handler := cors.Default().Handler(router)
+
+	log.Fatal(http.ListenAndServe(":"+port, corsWrapper.Handler(router)))
 
 }
 
