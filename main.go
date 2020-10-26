@@ -68,13 +68,13 @@ func createContact(response http.ResponseWriter, request *http.Request) {
 
 	message := make(map[string]interface{})
 
-		_, err := validateToken(request)
+	// 	_, err := validateToken(request)
 
-	if err != nil {
-		response.WriteHeader(http.StatusNotFound)
-		response.Write([]byte(`{"message": "Pls, provide a valid token"}`))
-		return
-	}
+	// if err != nil {
+	// 	response.WriteHeader(http.StatusNotFound)
+	// 	response.Write([]byte(`{"message": "Pls, provide a valid token"}`))
+	// 	return
+	// }
 
 	if contact.About == "" {
 		message["email"] = "Email field is required"
