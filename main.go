@@ -123,7 +123,9 @@ func getContacts(response http.ResponseWriter, request *http.Request) {
 	var contacts []Contact
 	finalResult := make(map[string]interface{})
 
-	result := db.Find(&contacts)
+	// result := db.Find(&contacts)
+
+	result := db.Raw("SELECT * FROM contacts ORDER BY Name ASC").Scan(&contacts)
 
 	if result.Error != nil {
 		finalResult["message"] = "Unable to fetch contacts"
