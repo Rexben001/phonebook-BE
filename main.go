@@ -431,7 +431,7 @@ func main() {
 
 	router := mux.NewRouter()
 
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, dbPort, user, password, dbName)
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require", host, dbPort, user, password, dbName)
 
 	db, err = gorm.Open("postgres", psqlInfo)
 
