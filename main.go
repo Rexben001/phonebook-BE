@@ -77,7 +77,7 @@ func createContact(response http.ResponseWriter, request *http.Request) {
 	// }
 
 	if contact.About == "" {
-		message["email"] = "Email field is required"
+		message["about"] = "About field is required"
 
 	}
 	if contact.Name == "" {
@@ -125,7 +125,7 @@ func getContacts(response http.ResponseWriter, request *http.Request) {
 
 	// result := db.Find(&contacts)
 
-	result := db.Raw("SELECT * FROM contacts WHERE deleted_at = ? ORDER BY Name ASC", nil).Scan(&contacts)
+	result := db.Raw("SELECT * FROM contacts ORDER BY Name ASC").Scan(&contacts)
 
 	if result.Error != nil {
 		finalResult["message"] = "Unable to fetch contacts"
