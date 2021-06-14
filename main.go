@@ -16,13 +16,11 @@ import (
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/jinzhu/gorm"
+
 	"github.com/rs/cors"
 
-	// "github.com/jinzhu/gorm"
-	// _ "github.com/jinzhu/gorm/dialects/postgres"
-
-	  "gorm.io/driver/postgres"
-  "gorm.io/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 type Contact struct {
@@ -435,7 +433,7 @@ func main() {
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, dbPort, user, password, dbName)
 
-	db, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
+	db, err = gorm.Open("postgres", psqlInfo)
 
 	if err != nil {
 
@@ -443,7 +441,7 @@ func main() {
 
 	}
 
-	// defer db.Close()
+	defer db.Close()
 
 	fmt.Println("App has started!!!!")
 
