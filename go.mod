@@ -8,5 +8,7 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/joho/godotenv v1.3.0
 	github.com/rs/cors v1.7.0
-	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+	gorm.io/driver/postgres v1.1.0 // indirect
+	gorm.io/gorm v1.21.10 // indirect
 )

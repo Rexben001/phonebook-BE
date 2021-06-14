@@ -16,11 +16,13 @@ import (
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/jinzhu/gorm"
-
 	"github.com/rs/cors"
 
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	// "github.com/jinzhu/gorm"
+	// _ "github.com/jinzhu/gorm/dialects/postgres"
+
+	  "gorm.io/driver/postgres"
+  "gorm.io/gorm"
 )
 
 type Contact struct {
@@ -123,9 +125,9 @@ func getContacts(response http.ResponseWriter, request *http.Request) {
 	var contacts []Contact
 	finalResult := make(map[string]interface{})
 
-	result := db.Find(&contacts)
+	// result := db.Find(&contacts)
 
-	// result := db.Raw("SELECT * FROM contact ORDER BY Name ASC").Scan(&contacts)
+	result := db.Raw("SELECT * FROM contacts WHERE deleted_at = ? ORDER BY Name ASC", nil).Scan(&contacts)
 
 	if result.Error != nil {
 		finalResult["message"] = "Unable to fetch contacts"
@@ -433,7 +435,7 @@ func main() {
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, dbPort, user, password, dbName)
 
-	db, err = gorm.Open("postgres", psqlInfo)
+	db, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
 
 	if err != nil {
 
@@ -441,7 +443,7 @@ func main() {
 
 	}
 
-	defer db.Close()
+	// defer db.Close()
 
 	fmt.Println("App has started!!!!")
 
