@@ -125,7 +125,7 @@ func getContacts(response http.ResponseWriter, request *http.Request) {
 
 	// result := db.Find(&contacts)
 
-	result := db.Raw("SELECT * FROM contacts ORDER BY Name ASC").Scan(&contacts)
+	result := db.Raw("SELECT * FROM contacts WHERE deleted_at is null ORDER BY Name ASC").Scan(&contacts)
 
 	if result.Error != nil {
 		finalResult["message"] = "Unable to fetch contacts"
@@ -430,6 +430,8 @@ func main() {
 	password, _ := os.LookupEnv("PASSWORD")
 
 	router := mux.NewRouter()
+
+	// set ssslmode = disable in localhost but sslmode = require in prod
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require", host, dbPort, user, password, dbName)
 
